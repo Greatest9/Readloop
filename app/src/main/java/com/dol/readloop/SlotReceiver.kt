@@ -12,6 +12,7 @@ class SlotReceiver : BroadcastReceiver() {
         }
         // Self-healing: re-arm everything after each fire.
         Alarms.scheduleAll(context)
+        IconTiers.apply(context)
         com.dol.readloop.widget.ReadingWidgetProvider.refreshAll(context)
     }
 }

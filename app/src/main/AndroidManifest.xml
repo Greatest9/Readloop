@@ -14,16 +14,81 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ReadLoop">
 
+        <!--
+            MainActivity is no longer the launcher entry point. Five activity-alias
+            entries below carry the MAIN/LAUNCHER filter, each with a different
+            streak-tier icon. IconTiers.kt enables exactly one at a time.
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity-alias
+            android:name=".IconTier0"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_t0"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".IconTier1"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_t1"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".IconTier2"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_t2"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".IconTier3"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_t3"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".IconTier4"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_t4"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <activity
             android:name=".EditorActivity"

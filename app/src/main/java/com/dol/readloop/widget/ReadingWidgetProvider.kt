@@ -15,6 +15,7 @@ import android.widget.RemoteViews
 import com.dol.readloop.Alarms
 import com.dol.readloop.Days
 import com.dol.readloop.DoneReceiver
+import com.dol.readloop.IconTiers
 import com.dol.readloop.MainActivity
 import com.dol.readloop.R
 import com.dol.readloop.Slots
@@ -42,6 +43,7 @@ class ReadingWidgetProvider : AppWidgetProvider() {
     companion object {
 
         fun refreshAll(context: Context) {
+            IconTiers.apply(context)
             val mgr = AppWidgetManager.getInstance(context) ?: return
             val ids = mgr.getAppWidgetIds(
                 ComponentName(context, ReadingWidgetProvider::class.java)

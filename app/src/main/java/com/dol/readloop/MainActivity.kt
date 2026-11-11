@@ -49,6 +49,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         Alarms.scheduleAll(this)
+        IconTiers.apply(this)
         render()
         askNotifOnce()
     }

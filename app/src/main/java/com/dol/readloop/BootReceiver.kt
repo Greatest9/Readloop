@@ -8,6 +8,7 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Notifier.ensureChannel(context)
         Alarms.scheduleAll(context)
+        IconTiers.apply(context)
         com.dol.readloop.widget.ReadingWidgetProvider.refreshAll(context)
     }
 }

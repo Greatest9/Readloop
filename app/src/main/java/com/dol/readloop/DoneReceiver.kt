@@ -11,6 +11,7 @@ class DoneReceiver : BroadcastReceiver() {
         if (hour in Slots.HOURS) {
             Store.markDone(context, hour)
             context.getSystemService(NotificationManager::class.java)?.cancel(hour)
+            IconTiers.apply(context)
             com.dol.readloop.widget.ReadingWidgetProvider.refreshAll(context)
         }
     }
