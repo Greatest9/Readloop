@@ -1,0 +1,18 @@
+.gradle/
+build/
+app/build/
+local.properties
+*.iml
+.idea/
+captures/
+.externalNativeBuild/
+.cxx/
+out/
+tools/
+*.zip
+
+# Signing material must never be committed
+*.jks
+*.keystore
+keystore/
+*.p12
