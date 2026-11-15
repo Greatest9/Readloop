@@ -7,6 +7,10 @@ around the clock — and shows the current block on a home-screen widget.
 The timetable changes per day of the week. Everything is built in the cloud by
 GitHub Actions; nothing needs to be installed on your computer.
 
+> **`friend` branch:** blank timetable, visible "Edit timetable" link (no PIN),
+> and a first-run checklist that walks you through notifications, exact
+> alarms, battery settings and the home-screen widget.
+
 ## Install
 
 1. Open the **Releases** page of this repo on your phone.

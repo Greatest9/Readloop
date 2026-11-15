@@ -232,6 +232,7 @@ class EditorActivity : Activity() {
                 )
             }
         }
+        Store.markTimetableSaved(this)
         Alarms.scheduleAll(this)
         com.dol.readloop.widget.ReadingWidgetProvider.refreshAll(this)
         Toast.makeText(this, "Saved. Reminders rescheduled.", Toast.LENGTH_SHORT).show()

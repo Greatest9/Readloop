@@ -111,6 +111,12 @@ object Store {
             .apply()
     }
 
+    fun timetableSaved(c: Context): Boolean = p(c).getBoolean("timetable_saved", false)
+
+    fun markTimetableSaved(c: Context) {
+        p(c).edit().putBoolean("timetable_saved", true).apply()
+    }
+
     fun done(c: Context, key: String = dayKey()): MutableSet<Int> {
         val raw = p(c).getString("done_$key", "") ?: ""
         return raw.split(',')

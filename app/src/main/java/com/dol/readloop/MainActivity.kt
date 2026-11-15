@@ -4,6 +4,9 @@ import android.Manifest
 import android.app.Activity
 import android.app.AlarmManager
 import android.app.AlertDialog
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.os.PowerManager
 import android.app.NotificationManager
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -76,6 +79,9 @@ class MainActivity : Activity() {
             setPadding(0, dp(2), 0, dp(14))
         })
 
+        val setup = setupCard()
+        if (setup != null) content.addView(setup)
+
         content.addView(TextView(this).apply {
             text = "Edit timetable"
             textSize = 13f
@@ -97,7 +103,7 @@ class MainActivity : Activity() {
 
         if (Build.VERSION.SDK_INT >= 31) {
             val am = getSystemService(AlarmManager::class.java)
-            if (am != null && !am.canScheduleExactAlarms()) content.addView(exactAlarmBanner())
+            if (setup == null && am != null && !am.canScheduleExactAlarms()) content.addView(exactAlarmBanner())
         }
 
         val now = System.currentTimeMillis()
@@ -314,6 +320,151 @@ class MainActivity : Activity() {
         }
         tv.setOnClickListener { onClick() }
         return tv
+    }
+
+    // ------------------------------------------------------------------ first-run setup
+
+    private class SetupItem(val label: String, val hint: String, val done: Boolean, val action: () -> Unit)
+
+    private fun openExactAlarmSettings() {
+        if (Build.VERSION.SDK_INT >= 31) {
+            try {
+                startActivity(
+                    Intent(
+                        Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                        android.net.Uri.parse("package:$packageName")
+                    )
+                )
+            } catch (e: Exception) {
+                startActivity(Intent(Settings.ACTION_SETTINGS))
+            }
+        }
+    }
+
+    private fun setupItems(): List<SetupItem> {
+        val items = ArrayList<SetupItem>()
+
+        if (Build.VERSION.SDK_INT >= 33) {
+            items.add(SetupItem(
+                "Allow notifications",
+                "Without this you get no reminders at all.",
+                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+            ) {
+                try {
+                    startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, packageName))
+                } catch (e: Exception) {
+                    startActivity(Intent(Settings.ACTION_SETTINGS))
+                }
+            })
+        }
+
+        if (Build.VERSION.SDK_INT >= 31) {
+            val am = getSystemService(AlarmManager::class.java)
+            items.add(SetupItem(
+                "Allow exact alarms",
+                "Keeps reminders on the minute instead of drifting.",
+                am != null && am.canScheduleExactAlarms()
+            ) { openExactAlarmSettings() })
+        }
+
+        val pm = getSystemService(PowerManager::class.java)
+        items.add(SetupItem(
+            "Stop battery optimisation",
+            "Some phones kill background alarms. Choose Allow.",
+            pm != null && pm.isIgnoringBatteryOptimizations(packageName)
+        ) {
+            try {
+                startActivity(Intent(
+                    Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                    android.net.Uri.parse("package:$packageName")
+                ))
+            } catch (e: Exception) {
+                try {
+                    startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                } catch (e2: Exception) {
+                    startActivity(Intent(Settings.ACTION_SETTINGS))
+                }
+            }
+        })
+
+        val awm = AppWidgetManager.getInstance(this)
+        val widget = ComponentName(this, com.dol.readloop.widget.ReadingWidgetProvider::class.java)
+        items.add(SetupItem(
+            "Add the home-screen widget",
+            "Shows your current block and lets you tick it off.",
+            awm.getAppWidgetIds(widget).isNotEmpty()
+        ) {
+            if (awm.isRequestPinAppWidgetSupported) {
+                awm.requestPinAppWidget(widget, null, null)
+            } else {
+                toast("Long-press your home screen, tap Widgets, then drag ReadLoop out.")
+            }
+        })
+
+        items.add(SetupItem(
+            "Set your timetable",
+            "Type your subjects for each day.",
+            Store.timetableSaved(this)
+        ) { startActivity(Intent(this, EditorActivity::class.java)) })
+
+        return items
+    }
+
+    /** Checklist for new users. Returns null once everything is done. */
+    private fun setupCard(): View? {
+        val items = setupItems()
+        val left = items.count { !it.done }
+        if (left == 0) return null
+
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(14), dp(16), dp(8))
+            background = resources.getDrawable(R.drawable.bg_card, theme)
+        }
+        val lp = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        lp.bottomMargin = dp(14)
+        box.layoutParams = lp
+
+        box.addView(TextView(this).apply {
+            text = "Get set up  \u00b7  " + (items.size - left) + " of " + items.size + " done"
+            textSize = 15f
+            setTextColor(0xFF0F172A.toInt())
+            typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
+            setPadding(0, 0, 0, dp(6))
+        })
+
+        for (item in items) {
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(0, dp(8), 0, dp(8))
+            }
+            row.addView(TextView(this).apply {
+                text = if (item.done) "\u2713" else "\u25CB"
+                textSize = 16f
+                setTextColor(if (item.done) 0xFF16A34A.toInt() else 0xFF94A3B8.toInt())
+                setPadding(0, 0, dp(12), 0)
+            })
+            val txt = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            txt.addView(TextView(this).apply {
+                text = item.label
+                textSize = 14f
+                setTextColor(if (item.done) 0xFF94A3B8.toInt() else 0xFF0F172A.toInt())
+                if (item.done) paintFlags = paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+            })
+            if (!item.done) txt.addView(TextView(this).apply {
+                text = item.hint
+                textSize = 12f
+                setTextColor(0xFF64748B.toInt())
+            })
+            row.addView(txt, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            if (!item.done) row.setOnClickListener { _ -> item.action() }
+            box.addView(row)
+        }
+        return box
     }
 
     private fun exactAlarmBanner(): View {
