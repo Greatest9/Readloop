@@ -1,11 +1,9 @@
 package com.dol.readloop
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
-import android.text.InputType
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.EditText
@@ -18,6 +16,7 @@ class EditorActivity : Activity() {
 
     private lateinit var slotsContainer: LinearLayout
     private lateinit var dayRow: LinearLayout
+    private lateinit var subjectsBox: EditText
 
     private var currentDay = Days.today()
 
@@ -44,7 +43,7 @@ class EditorActivity : Activity() {
         })
 
         col.addView(TextView(this).apply {
-            text = "Reminders fire at these 8 times, every day. Editing is the only control you get."
+            text = "Reminders fire at these 8 times, every day. Type your subjects for a day, spread them across the blocks, then fine-tune any block."
             textSize = 12.5f
             setTextColor(0xFF64748B.toInt())
             setPadding(0, dp(4), 0, dp(16))
@@ -61,6 +60,24 @@ class EditorActivity : Activity() {
         dayRow.layoutParams = dayLp
         col.addView(dayRow)
 
+        subjectsBox = EditText(this).apply {
+            hint = "Subjects for this day, separated by commas"
+            textSize = 14f
+            setSingleLine(false)
+        }
+        col.addView(subjectsBox)
+
+        val spread = TextView(this).apply {
+            text = "Spread across the 8 blocks"
+            textSize = 13.5f
+            gravity = Gravity.CENTER
+            setTextColor(0xFF16A34A.toInt())
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            setPadding(0, dp(10), 0, dp(16))
+        }
+        spread.setOnClickListener { spreadSubjects() }
+        col.addView(spread)
+
         slotsContainer = LinearLayout(this)
         slotsContainer.orientation = LinearLayout.VERTICAL
         col.addView(slotsContainer)
@@ -76,16 +93,6 @@ class EditorActivity : Activity() {
         }
         save.setOnClickListener { saveSchedule() }
         col.addView(save)
-
-        val pin = TextView(this).apply {
-            text = "Change PIN"
-            textSize = 13f
-            gravity = Gravity.CENTER
-            setTextColor(0xFF475569.toInt())
-            setPadding(0, dp(20), 0, 0)
-        }
-        pin.setOnClickListener { changePin() }
-        col.addView(pin)
 
         scroll.addView(col)
         setContentView(scroll)
@@ -196,6 +203,21 @@ class EditorActivity : Activity() {
         }
     }
 
+    private fun spreadSubjects() {
+        val subs = subjectsBox.text.toString()
+            .split(',', '\n', ';')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+        if (subs.isEmpty()) {
+            Toast.makeText(this, "Type at least one subject first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        for (f in fields) {
+            f.subject.setText(Defaults.spreadSubject(subs, f.hour))
+            f.detail.setText(Defaults.spreadDetail(subs, f.hour))
+        }
+    }
+
     private fun saveSchedule() {
         capture()
         for (day in 0..6) {
@@ -214,26 +236,5 @@ class EditorActivity : Activity() {
         com.dol.readloop.widget.ReadingWidgetProvider.refreshAll(this)
         Toast.makeText(this, "Saved. Reminders rescheduled.", Toast.LENGTH_SHORT).show()
         finish()
-    }
-
-    private fun changePin() {
-        val input = EditText(this).apply {
-            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-            hint = "New PIN (4+ digits)"
-        }
-        AlertDialog.Builder(this)
-            .setTitle("Change PIN")
-            .setView(input)
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Save") { _, _ ->
-                val pin = input.text.toString().trim()
-                if (pin.length < 4) {
-                    Toast.makeText(this, "PIN must be at least 4 digits", Toast.LENGTH_SHORT).show()
-                } else {
-                    Store.setPin(this, pin)
-                    Toast.makeText(this, "PIN updated", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .show()
     }
 }

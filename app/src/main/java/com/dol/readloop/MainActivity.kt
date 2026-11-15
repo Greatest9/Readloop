@@ -27,8 +27,6 @@ import android.widget.Toast
 class MainActivity : Activity() {
 
     private lateinit var content: LinearLayout
-    private var taps = 0
-    private var firstTap = 0L
     private var askedNotif = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,7 +67,6 @@ class MainActivity : Activity() {
             setTextColor(0xFF0F172A.toInt())
             typeface = Typeface.create("sans-serif", Typeface.BOLD)
         }
-        title.setOnClickListener { onSecretTap() }
         content.addView(title)
 
         content.addView(TextView(this).apply {
@@ -77,6 +74,15 @@ class MainActivity : Activity() {
             textSize = 13f
             setTextColor(0xFF64748B.toInt())
             setPadding(0, dp(2), 0, dp(14))
+        })
+
+        content.addView(TextView(this).apply {
+            text = "Edit timetable"
+            textSize = 13f
+            setTextColor(0xFF16A34A.toInt())
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            setPadding(0, 0, 0, dp(12))
+            setOnClickListener { startActivity(Intent(this@MainActivity, EditorActivity::class.java)) }
         })
 
         content.addView(dayStrip(day))
@@ -339,66 +345,6 @@ class MainActivity : Activity() {
             }
         }
         return tv
-    }
-
-    // ------------------------------------------------------------------ hidden editor
-
-    private fun onSecretTap() {
-        val now = System.currentTimeMillis()
-        if (now - firstTap > 3500) {
-            firstTap = now
-            taps = 0
-        }
-        taps++
-        if (taps < 7) return
-        taps = 0
-        if (Store.pinHash(this) == null) createPin() else askPin()
-    }
-
-    private fun createPin() {
-        val input = EditText(this).apply {
-            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-            hint = "Choose a PIN"
-        }
-        AlertDialog.Builder(this)
-            .setTitle("Lock the schedule")
-            .setMessage("Pick a PIN. It is the only way to edit your reading blocks.")
-            .setView(input)
-            .setCancelable(false)
-            .setPositiveButton("Save") { _, _ ->
-                val pin = input.text.toString().trim()
-                if (pin.length < 4) {
-                    toast("PIN must be at least 4 digits")
-                } else {
-                    Store.setPin(this, pin)
-                    toast("PIN set. Tap the title 7 times again to open the schedule.")
-                }
-            }
-            .show()
-    }
-
-    private fun askPin() {
-        val input = EditText(this).apply {
-            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-            hint = "PIN"
-        }
-        val dlg = AlertDialog.Builder(this)
-            .setTitle("Unlock schedule")
-            .setView(input)
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Unlock", null)
-            .create()
-        dlg.setOnShowListener {
-            dlg.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                if (Store.checkPin(this, input.text.toString().trim())) {
-                    dlg.dismiss()
-                    startActivity(Intent(this, EditorActivity::class.java))
-                } else {
-                    input.error = "Wrong PIN"
-                }
-            }
-        }
-        dlg.show()
     }
 
     // ------------------------------------------------------------------ misc

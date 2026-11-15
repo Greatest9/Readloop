@@ -61,16 +61,7 @@ object Days {
 }
 
 object Defaults {
-    /** Your weekly timetable, one entry per day. */
-    private val DAY_SUBJECTS = arrayOf(
-        arrayOf("Fluid Mechanics", "Leadership"),                              // Monday
-        arrayOf("Applied Mechanics"),                                          // Tuesday
-        arrayOf("Computer Programming", "MATLAB"),                             // Wednesday
-        arrayOf("Applied Electricity"),                                        // Thursday
-        arrayOf("Engineering Mathematics"),                                    // Friday
-        arrayOf("Engineering Drawing"),                                        // Saturday
-        arrayOf("Entrepreneurship", "General Engineering Laboratory")          // Sunday
-    )
+    const val PLACEHOLDER = "Add your subject"
 
     private val FOCUS = arrayOf(
         "Read the next section and take notes",
@@ -79,18 +70,21 @@ object Defaults {
         "Active recall - test yourself without notes"
     )
 
-    private fun subjects(day: Int) = DAY_SUBJECTS[day.coerceIn(0, 6)]
-
-    fun subject(day: Int, hour: Int): String {
-        val subs = subjects(day)
+    /** Spread a list of subjects across the 8 blocks, round-robin. */
+    fun spreadSubject(subs: List<String>, hour: Int): String {
+        if (subs.isEmpty()) return PLACEHOLDER
         return subs[Slots.indexOf(hour) % subs.size]
     }
 
-    fun detail(day: Int, hour: Int): String {
-        val subs = subjects(day)
-        val idx = Slots.indexOf(hour)
-        return FOCUS[(idx / subs.size) % FOCUS.size]
+    /** Reading focus rotates once every subject has had a turn. */
+    fun spreadDetail(subs: List<String>, hour: Int): String {
+        val n = subs.size.coerceAtLeast(1)
+        return FOCUS[(Slots.indexOf(hour) / n) % FOCUS.size]
     }
+
+    fun subject(day: Int, hour: Int): String = PLACEHOLDER
+
+    fun detail(day: Int, hour: Int): String = spreadDetail(emptyList(), hour)
 }
 
 object Store {
